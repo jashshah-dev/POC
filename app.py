@@ -103,50 +103,112 @@ def recursive_summarize(text_with_pages):
         st.error(f"An error occurred during summarization: {str(e)}")
         return None
 
-# Main function for Streamlit app
 def main():
-    st.set_page_config(page_title="Chat PDF")
-    st.header("Chat with PDF using Gemini")
+    st.set_page_config(page_title="Chat PDF", page_icon="📚", layout="wide")
+    
+    # Custom CSS for better styling
+    st.markdown("""
+    <style>
+    .main-header {
+        font-size: 2.5em;
+        color: #4A4A4A;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .sub-header {
+        font-size: 1.5em;
+        color: #6A6A6A;
+        margin-bottom: 20px;
+    }
+    .info-box {
+        background-color: #F0F2F6;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .step {
+        margin-bottom: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    # Sidebar for PDF upload
-    with st.sidebar:
-        st.title("Menu:")
-        pdf_docs = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
-        process_button = st.button("Submit & Process")
+    st.markdown("<h1 class='main-header'>📚 PDF Genius: Your Smart Document Assistant</h1>", unsafe_allow_html=True)
 
-    if process_button:
-        if pdf_docs:
-            with st.spinner("Processing..."):
-                text_with_pages = get_pdf_text(pdf_docs)
-                text_chunks = get_text_chunks(text_with_pages)
-                get_vector_store(text_chunks)
-                st.session_state['processed'] = True
-                st.session_state['text_with_pages'] = text_with_pages
-                st.success("Processing complete!")
-        else:
-            st.error("Please upload a PDF file.")
+    st.markdown("<div class='info-box'>", unsafe_allow_html=True)
+    st.markdown("<h2 class='sub-header'>How PDF Genius Works:</h2>", unsafe_allow_html=True)
+    st.markdown("""
+    <ol>
+    <li class='step'><strong>Upload:</strong> Start by uploading one or more PDF files.</li>
+    <li class='step'><strong>Process:</strong> Click 'Submit & Process' to analyze your documents.</li>
+    <li class='step'><strong>Interact:</strong> Choose to summarize the entire document or ask specific questions.</li>
+    </ol>
+    """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    option = st.selectbox("Choose an option", ["Summarize the PDF", "Ask a Question"])
+    col1, col2 = st.columns([1, 2])
 
-    if option == "Summarize the PDF":
-        if st.button("Summarize"):
-            if 'processed' in st.session_state and st.session_state['processed']:
-                with st.spinner("Summarizing the content..."):
-                    summary = recursive_summarize(st.session_state['text_with_pages'])
-                    if summary:
-                        st.subheader("Summary of the PDF")
-                        st.write(summary)
+    with col1:
+        st.markdown("<h2 class='sub-header'>📤 Upload & Process</h2>", unsafe_allow_html=True)
+        pdf_docs = st.file_uploader("Upload your PDF files", accept_multiple_files=True, type="pdf")
+        
+        if st.button("Submit & Process"):
+            if pdf_docs:
+                with st.spinner("Processing your documents... This may take a moment."):
+                    text_with_pages = get_pdf_text(pdf_docs)
+                    text_chunks = get_text_chunks(text_with_pages)
+                    get_vector_store(text_chunks)
+                    st.session_state['processed'] = True
+                    st.session_state['text_with_pages'] = text_with_pages
+                st.success("✅ Processing complete! You can now summarize or ask questions.")
             else:
-                st.error("Please upload and process a PDF file first.")
+                st.error("Please upload at least one PDF file.")
+        
+        st.markdown("<div class='info-box'>", unsafe_allow_html=True)
+        st.markdown("<h3>Why Submit & Process?</h3>", unsafe_allow_html=True)
+        st.markdown("""
+        This step is crucial as it:
+        - Extracts text from your PDFs
+        - Analyzes the content
+        - Prepares the data for quick retrieval
+        
+        Without this step, the app can't understand or answer questions about your documents.
+        """)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    elif option == "Ask a Question":
-        user_question = st.text_input("Ask a Question:")
-        if user_question:
-            if 'processed' in st.session_state and st.session_state['processed']:
-                with st.spinner("Fetching the answer..."):
-                    user_input(user_question)
-            else:
-                st.error("Please upload and process a PDF file first.")
+    with col2:
+        st.markdown("<h2 class='sub-header'>🧠 Interact with Your Documents</h2>", unsafe_allow_html=True)
+        
+        option = st.selectbox("Choose an option:", ["Summarize the PDF", "Ask a Question"])
+
+        if option == "Summarize the PDF":
+            if st.button("Generate Summary"):
+                if 'processed' in st.session_state and st.session_state['processed']:
+                    with st.spinner("Crafting a comprehensive summary..."):
+                        summary = recursive_summarize(st.session_state['text_with_pages'])
+                        if summary:
+                            st.markdown("<h3>📝 Document Summary:</h3>", unsafe_allow_html=True)
+                            st.write(summary)
+                else:
+                    st.warning("Please upload and process your PDF files first.")
+
+        elif option == "Ask a Question":
+            user_question = st.text_input("What would you like to know about your document?")
+            if user_question:
+                if 'processed' in st.session_state and st.session_state['processed']:
+                    with st.spinner("Searching for the best answer..."):
+                        user_input(user_question)
+                else:
+                    st.warning("Please upload and process your PDF files first.")
+
+    st.markdown("<div class='info-box'>", unsafe_allow_html=True)
+    st.markdown("<h3>💡 How PDF Genius Helps You:</h3>", unsafe_allow_html=True)
+    st.markdown("""
+    - **Time-Saving:** Quickly summarize lengthy documents.
+    - **Insightful:** Extract key information without reading the entire text.
+    - **Efficient:** Ask specific questions and get precise answers.
+    - **Versatile:** Works with multiple PDFs, ideal for research or document analysis.
+    """)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
